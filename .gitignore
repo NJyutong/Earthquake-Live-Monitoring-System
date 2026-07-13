@@ -1,0 +1,76 @@
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and package-manager caches
+node_modules/
+.npm-cache/
+.yarn/
+.pnpm-store/
+
+# Build, test, and framework output
+dist/
+build/
+.next/
+.cache/
+coverage/
+.eslintcache
+*.tsbuildinfo
+
+# Runtime data, uploads, sessions, and logs
+data/*
+!data/.gitkeep
+uploads/
+storage/
+logs/
+tmp/
+temp/
+cache/
+*.log
+*.pid
+*.seed
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Credentials and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Backups and generated archives
+backup/
+backups/
+*.bak
+*.backup
+*.old
+*.orig
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Cloud and deployment tool state
+.wrangler/
+.dev.vars
+
+# Editor, OS, and local agent metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+.agents/
+.codex/
+.impeccable/
+skills-lock.json
+
