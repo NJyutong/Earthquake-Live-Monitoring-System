@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>地震数据监控</title>
+  <link rel="icon" type="image/png" href="/app-icon.png">
+  <link rel="apple-touch-icon" href="/app-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script src="/theme-init.js"></script>
+  <script defer src="/vendor/pinyin-pro/index.js?v=3.18.2"></script>
+  <script defer src="i18n.js?v=r1"></script>
+  <link rel="stylesheet" href="mobile.css?v=r1">
+  <script defer src="shared.js?v=r1"></script>
+  <script defer src="secure-storage.js?v=r1"></script>
+  <script defer src="voice-alert.js?v=r1"></script>
+  <script defer src="push-client.js?v=r1"></script>
+  <script defer src="china-admin.js"></script>
+  <script defer src="official-map.js?v=r1"></script>
+  <script defer src="mobile.js?v=r1"></script>
+</head>
+<body data-data-state="connecting" data-quake-state="connecting">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand-link" href="index.html">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span>
+          <b>地震数据监控</b>
+          <small>实时监控</small>
+        </span>
+      </a>
+      <div class="header-controls">
+        <nav class="language-switch" aria-label="切换语言">
+          <button type="button" data-language="zh-CN" data-i18n-skip>中</button>
+          <button type="button" data-language="en">EN</button>
+        </nav>
+        <nav class="theme-switch" aria-label="颜色方案">
+          <span class="theme-icon" aria-hidden="true">☀️</span>
+          <label class="theme-toggle" aria-label="切换浅色和深色">
+            <input type="checkbox" id="theme-switch">
+            <span></span>
+          </label>
+          <span class="theme-icon" aria-hidden="true">🌙</span>
+        </nav>
+      </div>
+      <button class="drawer-toggle gear-button" id="mobile-menu-open" type="button" aria-label="打开设置菜单" aria-controls="mobile-settings-drawer" aria-expanded="false">
+        <span class="gear-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+    <section class="location-strip" id="location-pill" role="button" tabindex="0" aria-label="当前关注地址，点击重新定位">
+      <span>当前关注</span>
+      <strong id="current-admin">等待定位</strong>
+      <small>自动使用设备定位估算 P/S 波到达时间与本地烈度</small>
+    </section>
+  </header>
+
+  <main class="mobile-web">
+    <aside class="data-disclaimer" aria-label="数据使用声明">
+      <strong>数据声明</strong>
+      <span>本页面汇集公共平台与公开信源，数据可能存在延迟、缺失或误差，仅供信息参考，不替代政府部门正式发布及应急指令。</span>
+    </aside>
+
+    <section class="hero-alert" aria-label="最新地震信息">
+      <div class="alert-state">
+        <span id="selected-source">正在连接服务器中</span>
+        <strong id="selected-status">连接中</strong>
+      </div>
+      <h1 id="selected-location">等待服务器返回地震数据</h1>
+      <div class="hero-grid">
+        <article>
+          <span>震级</span>
+          <strong id="selected-mag">--</strong>
+        </article>
+        <article>
+          <span>本地烈度</span>
+          <strong id="selected-intensity">--</strong>
+        </article>
+        <article>
+          <span>震源深度</span>
+          <strong id="selected-depth">--</strong>
+        </article>
+        <article>
+          <span>震中距离</span>
+          <strong id="selected-distance">--</strong>
+        </article>
+      </div>
+      <div class="wave-card">
+        <div>
+          <span>纵波 P</span>
+          <strong id="selected-p">--</strong>
+        </div>
+        <div>
+          <span>横波 S</span>
+          <strong id="mobile-s-count">--</strong>
+        </div>
+      </div>
+      <p id="selected-action">正在获取历史数据与实时信源状态</p>
+    </section>
+
+    <section class="map-card" aria-label="震中地图和详情">
+      <div class="section-head">
+        <div>
+          <p>震中定位</p>
+          <h2>实时地图</h2>
+        </div>
+        <div class="mobile-map-source-row" aria-label="地图源选择">
+          <select id="map-source" aria-label="地图源"></select>
+          <div class="map-source-buttons" id="mobile-map-source-buttons"></div>
+        </div>
+      </div>
+      <label class="mobile-map-token-row is-hidden" id="token-row">
+        <span>天地图 token</span>
+        <input type="password" id="map-token" autocomplete="off" placeholder="输入 token">
+        <button type="button" id="save-map-token">应用</button>
+      </label>
+      <div class="mini-map" id="mobile-map-stage" data-map-source="amap">
+        <div id="map" class="mobile-official-map" aria-label="实时地震地图"></div>
+        <div class="map-focus-controls" aria-label="地图定位">
+          <button type="button" data-map-focus="epicenter" aria-label="地图居中到震中" aria-pressed="false">
+            <span class="focus-symbol epicenter-symbol" aria-hidden="true"></span>
+            <b>震中</b>
+          </button>
+          <button type="button" data-map-focus="user" aria-label="地图居中到我的位置" aria-pressed="false">
+            <span class="focus-symbol user-symbol" aria-hidden="true"></span>
+            <b>我的</b>
+          </button>
+        </div>
+        <div class="map-notice-slot" id="mobile-map-notice-slot" aria-live="polite"></div>
+      </div>
+      <dl class="quick-detail">
+        <div><dt>发震时间</dt><dd id="detail-origin">--</dd></div>
+        <div><dt>接收时间</dt><dd id="detail-received">--</dd></div>
+        <div><dt>震级</dt><dd id="detail-magnitude">--</dd></div>
+        <div><dt>深度</dt><dd id="detail-depth">--</dd></div>
+        <div><dt>经纬度</dt><dd id="detail-coords">--</dd></div>
+        <div><dt>本地烈度</dt><dd id="detail-intensity">--</dd></div>
+        <div><dt>提前时间</dt><dd id="detail-warning-time">--</dd></div>
+        <div><dt>震中距您</dt><dd id="detail-distance">--</dd></div>
+        <div><dt>波及范围</dt><dd id="detail-radius">--</dd></div>
+        <div><dt>合并信源</dt><dd id="detail-sources">--</dd></div>
+        <div><dt>数据来源</dt><dd id="detail-source">--</dd></div>
+        <div><dt>事件 ID</dt><dd id="detail-event-id">--</dd></div>
+      </dl>
+    </section>
+
+    <section class="history-card" aria-label="最近地震列表">
+      <div class="section-head">
+        <div>
+          <p>最近 30 次</p>
+          <h2>历史地震</h2>
+        </div>
+        <span id="history-caption">点击查看详情</span>
+      </div>
+      <div class="event-list" id="mobile-event-list">
+      </div>
+    </section>
+  </main>
+  <div class="drawer-backdrop" id="mobile-drawer-backdrop"></div>
+  <aside class="mobile-drawer" id="mobile-settings-drawer" aria-label="设置菜单" aria-hidden="true">
+    <header class="drawer-head">
+      <span class="drawer-logo" aria-hidden="true"></span>
+      <div>
+        <p>网页控制</p>
+        <h2>设置菜单</h2>
+      </div>
+      <button type="button" id="mobile-menu-close" aria-label="关闭设置菜单">关闭</button>
+    </header>
+    <div class="drawer-body">
+      <section class="drawer-section">
+        <h3>运行控制</h3>
+        <label class="setting-switch">
+          <span>后台推送</span>
+          <input type="checkbox" id="mobile-notification-toggle" aria-describedby="mobile-notification-status">
+        </label>
+        <p class="setting-note" id="mobile-notification-status" role="status">后台推送未开启</p>
+        <div class="notification-settings-panel is-hidden" id="mobile-notification-settings-panel">
+          <div class="notification-panel-head">
+            <strong>推送条件</strong>
+            <small>仅当震级达到阈值并匹配所选地区时发送系统通知</small>
+          </div>
+          <label class="setting-field">
+            <span>提醒震级阈值</span>
+            <select id="mobile-intensity-threshold">
+              <option value="3">3 级及以上</option>
+              <option value="4">4 级及以上</option>
+              <option value="5">5 级及以上</option>
+              <option value="6">6 级及以上</option>
+            </select>
+          </label>
+          <label class="setting-field"><span>推送国家</span><select id="mobile-notify-country"></select></label>
+          <label class="setting-field"><span>推送区域</span><select id="mobile-notify-region"></select></label>
+          <label class="setting-field"><span>推送省份</span><select id="mobile-notify-province"></select></label>
+          <label class="setting-field"><span>推送城市</span><select id="mobile-notify-city"></select></label>
+          <label class="setting-field"><span>推送区县</span><select id="mobile-notify-district"></select></label>
+        </div>
+        <label class="setting-switch">
+          <span>语音播报</span>
+          <input type="checkbox" id="mobile-voice-toggle" aria-describedby="mobile-voice-status">
+        </label>
+        <p class="setting-note" id="mobile-voice-status" role="status">语音播报未开启</p>
+      </section>
+      <section class="drawer-section">
+        <h3>数据接收</h3>
+        <label class="setting-field"><span>国家/地区</span><select id="mobile-country-select"></select></label>
+        <label class="setting-field"><span>区域</span><select id="mobile-region-select"></select></label>
+      </section>
+      <section class="drawer-section">
+        <h3>数据源状态</h3>
+        <div class="mobile-source-summary" role="status" aria-live="polite">
+          <span class="warning" id="mobile-source-summary-text">信源状态载入中</span>
+          <strong class="warning" id="mobile-channel-status">正在连接服务器</strong>
+        </div>
+        <div class="source-list" id="mobile-source-list" role="list"></div>
+      </section>
+      <section class="drawer-section">
+        <h3>调试工具</h3>
+        <div class="debug-strip">
+          <button type="button" id="mobile-debug-enable">调试模式</button>
+        </div>
+        <div class="debug-unlocked-actions is-hidden" id="mobile-debug-unlocked-actions">
+          <button type="button" id="mobile-debug-add-history">测试地震推送</button>
+          <button type="button" id="mobile-debug-test-notification">测试本机通知</button>
+          <button type="button" id="mobile-debug-cookie">Cookie 提示</button>
+        </div>
+        <p class="setting-note" id="mobile-control-status">调试模式关闭</p>
+      </section>
+    </div>
+  </aside>
+  <section class="message-dialog" id="mobile-message-dialog" aria-modal="true" aria-labelledby="mobile-message-title" role="dialog">
+    <div>
+      <h2 id="mobile-message-title">提示</h2>
+      <p id="mobile-message-text">请稍后重试。</p>
+      <button type="button" id="mobile-message-close">知道了</button>
+    </div>
+  </section>
+  <section class="message-dialog debug-dialog" id="mobile-debug-dialog" aria-modal="true" aria-labelledby="mobile-debug-dialog-title" role="dialog">
+    <div>
+      <div class="debug-dialog-head">
+        <span class="debug-mark" aria-hidden="true"></span>
+        <div>
+          <h2 id="mobile-debug-dialog-title">调试模式</h2>
+          <p>用于本机验证测试地震、Cookie 提示栏和调试密码，不会触发真实播报。</p>
+        </div>
+      </div>
+      <label class="dialog-field">
+        <span>调试密码</span>
+        <input type="password" id="mobile-debug-password" autocomplete="current-password">
+      </label>
+      <div class="dialog-actions">
+        <button type="button" id="mobile-debug-cancel">取消</button>
+        <button type="button" id="mobile-debug-confirm">进入调试</button>
+      </div>
+      <button type="button" class="debug-secondary-action" id="mobile-debug-change-password">修改调试密码</button>
+    </div>
+  </section>
+  <section class="message-dialog debug-dialog" id="mobile-debug-password-dialog" aria-modal="true" aria-labelledby="mobile-debug-password-title" role="dialog">
+    <div>
+      <div class="debug-dialog-head">
+        <span class="debug-mark" aria-hidden="true"></span>
+        <div>
+          <h2 id="mobile-debug-password-title">修改调试密码</h2>
+          <p>需要先验证当前密码。新密码会保存到服务器配置中。</p>
+        </div>
+      </div>
+      <label class="dialog-field">
+        <span>原密码</span>
+        <input type="password" id="mobile-debug-old-password" autocomplete="current-password">
+      </label>
+      <label class="dialog-field">
+        <span>新密码</span>
+        <input type="password" id="mobile-debug-new-password" autocomplete="new-password" minlength="8" maxlength="128" spellcheck="false" aria-describedby="mobile-debug-password-rules">
+      </label>
+      <ul class="password-rules" id="mobile-debug-password-rules" aria-label="新密码要求">
+        <li data-password-rule="length">8 至 128 位</li>
+        <li data-password-rule="uppercase">至少 1 个大写字母</li>
+        <li data-password-rule="number">至少 1 个数字</li>
+        <li data-password-rule="special">至少 1 个特殊符号，例如 @</li>
+      </ul>
+      <div class="dialog-actions">
+        <button type="button" id="mobile-debug-password-cancel">返回</button>
+        <button type="button" id="mobile-debug-password-save">保存新密码</button>
+      </div>
+    </div>
+  </section>
+  <div class="toast is-hidden" id="mobile-toast" role="status" aria-live="polite"></div>
+</body>
+</html>

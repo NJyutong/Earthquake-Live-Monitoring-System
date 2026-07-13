@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>中国地震数据监控 OBS</title>
+  <link rel="icon" type="image/png" href="/app-icon.png">
+  <link rel="apple-touch-icon" href="/app-icon.png">
+  <script src="/theme-init.js"></script>
+  <script defer src="/vendor/pinyin-pro/index.js?v=3.18.2"></script>
+  <script defer src="/i18n.js?v=r1"></script>
+  <link rel="stylesheet" href="/obs.css?v=r1">
+  <script defer src="/shared.js?v=r1"></script>
+  <script defer src="/secure-storage.js?v=r1"></script>
+  <script defer src="/official-map.js?v=r1"></script>
+  <script defer src="/obs.js?v=r1"></script>
+</head>
+<body data-data-state="connecting" data-quake-state="connecting">
+  <main class="obs-shell">
+    <section class="obs-disabled" id="obs-disabled">
+      <div>
+        <h1>OBS 输出未开启</h1>
+        <p>请先在设置页面打开“OBS 输出”开关。</p>
+      </div>
+    </section>
+    <header class="obs-header">
+      <div>
+        <p>实时公开数据聚合</p>
+        <h1>中国地震数据监控</h1>
+      </div>
+      <div class="obs-header-right">
+        <div class="obs-source-strip" id="source-status-list"></div>
+        <time id="current-time">--</time>
+      </div>
+    </header>
+
+    <section class="obs-main">
+      <section class="obs-map-panel">
+        <div class="obs-panel-title">
+          <span>震中定位</span>
+          <strong id="map-hint">地图加载中</strong>
+        </div>
+        <div id="map" class="obs-map"></div>
+      </section>
+
+      <aside class="obs-alert">
+        <div class="alert-source" id="latest-source">正在连接服务器中</div>
+        <div class="alert-location" id="latest-location">等待服务器返回地震数据</div>
+        <div class="obs-magnitude" id="latest-magnitude">-- 级</div>
+        <div class="obs-countdown">
+          <span>预计到达</span>
+          <strong class="wave-countdown" id="latest-countdown">--</strong>
+        </div>
+        <p>倒计时为估算，仅供展示</p>
+        <dl>
+          <div><dt>深度</dt><dd id="latest-depth">--</dd></div>
+          <div><dt>经纬度</dt><dd id="latest-coords">--</dd></div>
+          <div><dt>发震时间</dt><dd id="latest-origin">--</dd></div>
+          <div><dt>数据来源</dt><dd id="latest-source-detail">--</dd></div>
+          <div><dt>接收时间</dt><dd id="latest-received">--</dd></div>
+          <div><dt>预估烈度</dt><dd><span class="intensity-badge" id="latest-intensity">未知</span></dd></div>
+        </dl>
+      </aside>
+    </section>
+
+    <section class="obs-events">
+      <div class="event-ticker" id="event-list">
+        <article role="status">正在连接服务器中</article>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

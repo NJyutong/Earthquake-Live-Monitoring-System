@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>地震数据监控</title>
+  <link rel="icon" type="image/png" href="/app-icon.png">
+  <link rel="apple-touch-icon" href="/app-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://webapi.amap.com" crossorigin>
+  <link rel="dns-prefetch" href="//webapi.amap.com">
+  <script src="/theme-init.js"></script>
+  <script defer src="/vendor/pinyin-pro/index.js?v=3.18.2"></script>
+  <script defer src="/i18n.js?v=r1"></script>
+  <link rel="stylesheet" href="/styles.css?v=r1">
+  <script defer src="/shared.js?v=r1"></script>
+  <script defer src="/secure-storage.js?v=r1"></script>
+  <script defer src="/voice-alert.js?v=r1"></script>
+  <script defer src="/push-client.js?v=r1"></script>
+  <script defer src="/china-admin.js"></script>
+  <script defer src="/official-map.js?v=r1"></script>
+  <script defer src="/app.js?v=r1"></script>
+</head>
+<body data-data-state="connecting" data-quake-state="connecting">
+  <main class="shell">
+    <header class="topbar" aria-label="监控总览">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <p>国家地震速报监控</p>
+          <h1>地震数据监控</h1>
+        </div>
+      </div>
+      <div class="display-controls">
+        <nav class="language-switch" aria-label="切换语言">
+          <button type="button" data-language="zh-CN" data-i18n-skip>中</button>
+          <button type="button" data-language="en">EN</button>
+        </nav>
+        <nav class="theme-tabs" aria-label="颜色方案">
+          <span class="theme-icon" aria-hidden="true">☀️</span>
+          <label class="theme-toggle" aria-label="切换浅色和深色">
+            <input type="checkbox" id="theme-switch">
+            <span></span>
+          </label>
+          <span class="theme-icon" aria-hidden="true">🌙</span>
+        </nav>
+      </div>
+      <button type="button" class="compact-settings-button" id="desktop-settings-open-compact" aria-label="打开设置中心"></button>
+      <div class="status-stack">
+        <div class="source-status-wrap" tabindex="0" aria-label="信源连接状态，悬停查看全部信源">
+          <span class="status-chip warning" id="source-summary"><i></i><span id="source-summary-text">信源状态载入中</span></span>
+          <div class="source-popover" role="tooltip" aria-label="地震信源连接状态">
+            <div class="source-popover-head">
+              <strong>信源连接状态</strong>
+              <span id="source-summary-small">等待更新</span>
+            </div>
+            <ul id="source-popover-list">
+              <li data-status="connecting">
+                <span><i></i>信源状态</span>
+                <b>等待更新</b>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <span class="status-chip warning" id="desktop-client-status"><i></i>正在连接服务器</span>
+        <time id="clock">--</time>
+      </div>
+    </header>
+
+    <aside class="data-disclaimer" aria-label="数据使用声明">
+      <strong>数据声明</strong>
+      <span>本页面汇集公共平台与公开信源，数据可能存在延迟、缺失或误差，仅供信息参考，不替代政府部门正式发布及应急指令。</span>
+    </aside>
+
+    <section class="summary-band" aria-label="核心指标">
+      <div class="connection-placeholder" role="status" aria-live="polite">
+        <strong>正在连接服务器中</strong>
+        <small>正在获取历史数据与实时信源状态</small>
+      </div>
+      <article>
+        <span>当前最新</span>
+        <strong id="summary-location">--</strong>
+        <small id="summary-source">--</small>
+      </article>
+      <article>
+        <span>震级</span>
+        <strong class="danger-text" id="summary-mag">--</strong>
+        <small id="summary-depth">--</small>
+      </article>
+      <article>
+        <span>距关注地</span>
+        <strong id="summary-distance">--</strong>
+        <small id="summary-focus">--</small>
+      </article>
+      <article>
+        <span>预估烈度</span>
+        <strong class="amber-text" id="summary-intensity">--</strong>
+        <small id="summary-impact">--</small>
+      </article>
+    </section>
+
+    <section class="workspace">
+      <section class="map-panel panel" aria-label="震中地图">
+        <div class="panel-head">
+          <div>
+            <p>震中定位</p>
+            <h2>实时地图</h2>
+          </div>
+          <div class="map-source-picker" aria-label="地图源选择">
+            <div class="map-source-buttons" id="desktop-map-source-buttons"></div>
+          </div>
+        </div>
+        <label class="map-token-entry is-hidden" id="desktop-map-token-row">
+          <span>天地图 token</span>
+          <input type="password" id="desktop-map-token" autocomplete="off" placeholder="输入 token 后应用">
+          <button type="button" id="desktop-save-map-token">应用</button>
+        </label>
+        <div class="map-stage" id="desktop-map-stage" data-map-source="amap">
+          <div id="map" class="map" aria-label="实时地震地图"></div>
+          <div class="map-metrics" aria-label="地图数据">
+            <div class="map-hud">
+              <span>震源坐标</span>
+              <strong id="desktop-map-coords">--</strong>
+            </div>
+            <div class="map-hud">
+              <span>传播半径</span>
+              <strong id="desktop-map-radius">--</strong>
+            </div>
+          </div>
+          <div class="map-focus-controls" aria-label="地图定位">
+            <button type="button" data-map-focus="epicenter" aria-label="地图居中到震中" aria-pressed="false">
+              <span class="focus-symbol epicenter-symbol" aria-hidden="true"></span>
+              <b>震中</b>
+            </button>
+            <button type="button" data-map-focus="user" aria-label="地图居中到我的位置" aria-pressed="false">
+              <span class="focus-symbol user-symbol" aria-hidden="true"></span>
+              <b>我的</b>
+            </button>
+          </div>
+          <div class="map-notice-slot" id="desktop-map-notice-slot" aria-live="polite"></div>
+          <div class="map-grid" aria-hidden="true"></div>
+          <div class="fault-line line-a" aria-hidden="true"></div>
+          <div class="fault-line line-b" aria-hidden="true"></div>
+          <div class="city-dot city-a"><b>成都</b></div>
+          <div class="city-dot city-b"><b>西安</b></div>
+          <div class="city-dot city-c"><b>重庆</b></div>
+          <div class="epicenter is-hidden" id="desktop-epicenter" aria-label="震中">
+            <span></span>
+            <strong id="desktop-map-mag">--</strong>
+            <em id="desktop-map-intensity">烈度 --</em>
+          </div>
+          <div class="map-runtime-status" id="desktop-map-runtime-status" aria-live="polite">
+            <span id="desktop-map-status">地图加载中</span>
+            <strong id="desktop-map-caption">正在连接地图服务</strong>
+          </div>
+        </div>
+      </section>
+
+      <aside class="alert-panel panel" aria-label="最新地震信息">
+        <div class="connection-placeholder" role="status" aria-live="polite">
+          <strong>正在连接服务器中</strong>
+          <small>地震数据返回后将在此显示</small>
+        </div>
+        <div class="alert-label" id="desktop-alert-label">--</div>
+        <h2 id="desktop-alert-title" data-i18n-skip>--</h2>
+        <div class="countdown-grid">
+          <article>
+            <span>纵波 P</span>
+            <strong id="p-count">--</strong>
+          </article>
+          <article class="is-hot">
+            <span>横波 S</span>
+            <strong id="s-count">--</strong>
+          </article>
+        </div>
+        <div class="intensity-scale" aria-label="烈度色块">
+          <span class="i1">I</span>
+          <span class="i2">II</span>
+          <span class="i3">IV</span>
+          <span class="i4">VI</span>
+          <span class="i5">VIII</span>
+          <span class="i6">X+</span>
+        </div>
+        <dl class="detail-grid">
+          <div><dt>发震时间</dt><dd id="desktop-detail-origin">--</dd></div>
+          <div><dt>接收时间</dt><dd id="desktop-detail-received">--</dd></div>
+          <div class="detail-map-fallback"><dt>震源坐标</dt><dd id="desktop-detail-coords">--</dd></div>
+          <div class="detail-map-fallback"><dt>传播半径</dt><dd id="desktop-detail-radius">--</dd></div>
+          <div><dt>数据来源</dt><dd id="desktop-detail-source">--</dd></div>
+          <div><dt>合并信源</dt><dd id="desktop-detail-sources">--</dd></div>
+          <div><dt>事件 ID</dt><dd id="desktop-detail-id">--</dd></div>
+          <div><dt>处置建议</dt><dd id="desktop-detail-action">--</dd></div>
+        </dl>
+      </aside>
+
+      <section class="events-panel panel" aria-label="最近三十次地震">
+        <div class="panel-head compact">
+          <div>
+            <p>最近 30 次</p>
+            <h2>地震列表</h2>
+          </div>
+        </div>
+        <div class="event-list" id="desktop-event-list">
+          <article class="empty-state is-connecting" role="status">正在连接服务器中</article>
+        </div>
+      </section>
+
+      <section class="ops-panel panel" aria-label="设置和 OBS">
+        <div class="panel-head compact">
+          <div>
+            <p>输出与控制</p>
+            <h2>设置中心</h2>
+          </div>
+          <span class="live-dot">LIVE</span>
+        </div>
+        <div class="ops-actions">
+          <button type="button" id="desktop-settings-open">打开设置中心</button>
+          <p class="setting-note" id="desktop-control-status">调试模式关闭</p>
+        </div>
+        <div class="ops-filter-card" aria-label="区域筛选">
+          <label class="setting-field">
+            <span>国家/地区</span>
+            <select id="desktop-country-select"></select>
+          </label>
+          <label class="setting-field">
+            <span>区域</span>
+            <select id="desktop-region-select"></select>
+          </label>
+        </div>
+      </section>
+    </section>
+    <div class="drawer-backdrop" id="desktop-settings-backdrop"></div>
+    <aside class="desktop-settings-drawer" id="desktop-settings-drawer" aria-label="设置中心" aria-hidden="true">
+      <header class="drawer-head">
+        <span class="drawer-logo" aria-hidden="true"></span>
+        <div>
+          <p>网页控制</p>
+          <h2>设置中心</h2>
+        </div>
+        <button type="button" id="desktop-settings-close">关闭</button>
+      </header>
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <h3>运行控制</h3>
+          <label class="setting-switch">
+            <span>OBS 输出</span>
+            <input type="checkbox" id="desktop-obs-toggle">
+          </label>
+          <label class="setting-switch">
+            <span>后台推送</span>
+            <input type="checkbox" id="desktop-notification-toggle">
+          </label>
+          <p class="setting-note" id="desktop-notification-status">后台推送未开启</p>
+          <label class="setting-switch">
+            <span>语音播报</span>
+            <input type="checkbox" id="desktop-voice-toggle" aria-describedby="desktop-voice-status">
+          </label>
+          <p class="setting-note" id="desktop-voice-status" role="status">语音播报未开启</p>
+          <div class="notification-settings-panel is-hidden" id="desktop-notification-settings-panel">
+            <div class="notification-panel-head">
+              <strong>推送条件</strong>
+              <small>仅当震级达到阈值并匹配所选地区时发送系统通知</small>
+            </div>
+            <label class="setting-field">
+              <span>提醒震级阈值</span>
+              <select id="desktop-intensity-threshold">
+                <option value="3">3 级及以上</option>
+                <option value="4">4 级及以上</option>
+                <option value="5">5 级及以上</option>
+                <option value="6">6 级及以上</option>
+              </select>
+            </label>
+            <label class="setting-field">
+              <span>推送国家</span>
+              <select id="desktop-notify-country"></select>
+            </label>
+            <label class="setting-field">
+              <span>推送区域</span>
+              <select id="desktop-notify-region"></select>
+            </label>
+            <label class="setting-field">
+              <span>推送省份</span>
+              <select id="desktop-notify-province"></select>
+            </label>
+            <label class="setting-field">
+              <span>推送城市</span>
+              <select id="desktop-notify-city"></select>
+            </label>
+            <label class="setting-field">
+              <span>推送区县</span>
+              <select id="desktop-notify-district"></select>
+            </label>
+          </div>
+        </section>
+        <section class="drawer-section">
+          <h3>调试工具</h3>
+          <div class="debug-strip">
+            <button type="button" id="desktop-debug-enable">调试模式</button>
+          </div>
+          <p class="setting-note">测试地震、Cookie 提示和通知测试会在输入调试密码后显示。</p>
+        </section>
+      </div>
+    </aside>
+    <section class="debug-floating-panel is-hidden" id="desktop-debug-floating-panel" role="region" tabindex="-1" aria-label="调试工具" aria-hidden="true">
+      <header class="debug-panel-handle" id="desktop-debug-panel-handle">
+        <span>调试工具</span>
+        <small id="desktop-debug-float-status">已开启</small>
+      </header>
+      <div class="debug-panel-body">
+        <button type="button" id="desktop-debug-float-add-history">测试地震推送</button>
+        <button type="button" id="desktop-debug-float-cookie">测试 Cookie 提示</button>
+        <button type="button" id="desktop-debug-float-test-notification">测试本机通知</button>
+        <button type="button" id="desktop-debug-float-test-push">测试后台推送</button>
+        <button type="button" class="debug-danger" id="desktop-debug-float-exit">关闭调试模式</button>
+      </div>
+    </section>
+    <section class="message-dialog" id="desktop-message-dialog" aria-modal="true" aria-labelledby="desktop-message-title" role="dialog">
+      <div>
+        <h2 id="desktop-message-title">提示</h2>
+        <p id="desktop-message-text">请稍后重试。</p>
+        <button type="button" id="desktop-message-close">知道了</button>
+      </div>
+    </section>
+    <section class="message-dialog debug-dialog" id="desktop-debug-dialog" aria-modal="true" aria-labelledby="desktop-debug-dialog-title" role="dialog">
+      <div>
+        <div class="debug-dialog-head">
+          <span class="debug-mark" aria-hidden="true"></span>
+          <div>
+            <h2 id="desktop-debug-dialog-title">调试模式</h2>
+            <p>用于本机验证历史地震、Cookie 提示栏和调试密码，不会触发真实播报。</p>
+          </div>
+        </div>
+        <label class="dialog-field">
+          <span>调试密码</span>
+          <input type="password" id="desktop-debug-password" autocomplete="current-password">
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="desktop-debug-cancel">取消</button>
+          <button type="button" id="desktop-debug-confirm">进入调试</button>
+        </div>
+        <button type="button" class="debug-secondary-action" id="desktop-debug-change-password">修改调试密码</button>
+      </div>
+    </section>
+    <section class="message-dialog debug-dialog" id="desktop-debug-password-dialog" aria-modal="true" aria-labelledby="desktop-debug-password-title" role="dialog">
+      <div>
+        <div class="debug-dialog-head">
+          <span class="debug-mark" aria-hidden="true"></span>
+          <div>
+            <h2 id="desktop-debug-password-title">修改调试密码</h2>
+            <p>需要先验证当前密码。新密码会保存到服务器配置中。</p>
+          </div>
+        </div>
+        <label class="dialog-field">
+          <span>原密码</span>
+          <input type="password" id="desktop-debug-old-password" autocomplete="current-password">
+        </label>
+        <label class="dialog-field">
+          <span>新密码</span>
+          <input type="password" id="desktop-debug-new-password" autocomplete="new-password" minlength="8" maxlength="128" spellcheck="false" aria-describedby="desktop-debug-password-rules">
+        </label>
+        <ul class="password-rules" id="desktop-debug-password-rules" aria-label="新密码要求">
+          <li data-password-rule="length">8 至 128 位</li>
+          <li data-password-rule="uppercase">至少 1 个大写字母</li>
+          <li data-password-rule="number">至少 1 个数字</li>
+          <li data-password-rule="special">至少 1 个特殊符号，例如 @</li>
+        </ul>
+        <div class="dialog-actions">
+          <button type="button" id="desktop-debug-password-cancel">返回</button>
+          <button type="button" id="desktop-debug-password-save">保存新密码</button>
+        </div>
+      </div>
+    </section>
+    <div class="toast is-hidden" id="desktop-toast" role="status" aria-live="polite"></div>
+  </main>
+</body>
+</html>
