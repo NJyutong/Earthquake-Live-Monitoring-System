@@ -1,2 +1,2 @@
-# China-Earthquake-Monitoring-and-Early-Warning-System
+# China-Earthquake-Warning
 面向全球的（但以中国为主）地震监测与预警平台，支持实时地震信息展示、地图定位、震中标记、震级与烈度显示、预警倒计时、语音播报及 OBS 浏览器源。项目已完成源码整理与安全脱敏，不包含真实密钥、账号密码、用户数据或服务器凭证，部署时需自行配置环境变量。
