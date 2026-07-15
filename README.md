@@ -1,6 +1,6 @@
 <div align="center">
 
-<p><a href="README_CN.md">Chinese</a> · <strong>English</strong></p>
+<p><a href="README_CN.md">中文</a> · <strong>English</strong></p>
 
 <img src="public/app-icon.png" alt="Earthquake Live Monitoring System" width="92">
 
