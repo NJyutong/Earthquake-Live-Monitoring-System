@@ -30,7 +30,7 @@
 
 ### Reporting a vulnerability
 
-Use GitHub Private Vulnerability Reporting when enabled, or contact the maintainer privately through the contact method on their public profile. Do not put unpatched vulnerabilities, live credentials, push endpoints, user locations, logs, or usable attack credentials in a public issue.
+Use GitHub Private Vulnerability Reporting when enabled. Do not put unpatched vulnerabilities, live credentials, push endpoints, user locations, logs, or usable attack credentials in a public issue.
 
 Include affected versions, impact, minimal reproduction steps, and suggested mitigations. Redact every sensitive sample.
 
