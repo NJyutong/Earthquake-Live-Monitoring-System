@@ -1871,8 +1871,8 @@
       openDebugDialog();
       return;
     }
-    const city = faultCities[Math.floor(secureRandom() * faultCities.length)];
-    const magnitude = Number((3.2 + secureRandom() * 3.8).toFixed(1));
+    const city = faultCities[secureRandomInt(faultCities.length)];
+    const magnitude = 3.2 + secureRandomInt(39) / 10;
     const now = new Date().toISOString();
     const testEvent = {
       source: 'debug',
@@ -1880,7 +1880,7 @@
       eventId: `debug-${Date.now()}`,
       location: city.location,
       magnitude,
-      depth: Math.round(8 + secureRandom() * 18),
+      depth: 8 + secureRandomInt(19),
       latitude: city.lat,
       longitude: city.lon,
       intensity: magnitude >= 5 ? 6 : magnitude >= 4 ? 4 : 3,
@@ -1902,9 +1902,17 @@
     }
   }
 
-  function secureRandom() {
-    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') return 0.5;
-    return window.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000;
+  function secureRandomInt(maxExclusive) {
+    const upperBound = Math.floor(Number(maxExclusive));
+    if (!Number.isSafeInteger(upperBound) || upperBound <= 0 || upperBound > 0x100000000) return 0;
+    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') return Math.floor(upperBound / 2);
+    const range = 0x100000000;
+    const limit = range - range % upperBound;
+    const values = new Uint32Array(1);
+    do {
+      window.crypto.getRandomValues(values);
+    } while (values[0] >= limit);
+    return values[0] % upperBound;
   }
 
   function showDebugCookieBar() {

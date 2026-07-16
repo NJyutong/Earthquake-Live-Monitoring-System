@@ -2773,14 +2773,14 @@
     }
     const now = new Date();
     const epicenter = debugFaultLocation();
-    const magnitude = Number((3.2 + secureRandom() * 3.8).toFixed(1));
+    const magnitude = 3.2 + secureRandomInt(39) / 10;
     const testEvent = {
       source: 'debug_local',
       sourceLabel: '本地调试',
       eventId: `debug-${now.getTime()}`,
       location: epicenter.location,
       magnitude,
-      depth: Math.round(6 + secureRandom() * 18),
+      depth: 6 + secureRandomInt(19),
       latitude: epicenter.latitude,
       longitude: epicenter.longitude,
       intensity: magnitude >= 5 ? 6 : magnitude >= 4 ? 4 : 3,
@@ -2803,17 +2803,29 @@
   }
 
   function debugFaultLocation() {
-    const base = FAULT_BELT_LOCATIONS[Math.floor(secureRandom() * FAULT_BELT_LOCATIONS.length)];
+    const base = FAULT_BELT_LOCATIONS[secureRandomInt(FAULT_BELT_LOCATIONS.length)];
     return {
       location: base.location,
-      latitude: base.lat + (secureRandom() - 0.5) * 0.18,
-      longitude: base.lon + (secureRandom() - 0.5) * 0.18
+      latitude: base.lat + secureRandomCoordinateOffset(),
+      longitude: base.lon + secureRandomCoordinateOffset()
     };
   }
 
-  function secureRandom() {
-    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') return 0.5;
-    return window.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000;
+  function secureRandomCoordinateOffset() {
+    return (secureRandomInt(18001) - 9000) / 100000;
+  }
+
+  function secureRandomInt(maxExclusive) {
+    const upperBound = Math.floor(Number(maxExclusive));
+    if (!Number.isSafeInteger(upperBound) || upperBound <= 0 || upperBound > 0x100000000) return 0;
+    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') return Math.floor(upperBound / 2);
+    const range = 0x100000000;
+    const limit = range - range % upperBound;
+    const values = new Uint32Array(1);
+    do {
+      window.crypto.getRandomValues(values);
+    } while (values[0] >= limit);
+    return values[0] % upperBound;
   }
 
   function showMessage(title, text) {

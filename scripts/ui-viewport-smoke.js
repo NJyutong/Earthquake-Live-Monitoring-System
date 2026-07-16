@@ -57,6 +57,43 @@ async function assertMapOverlaySafety(page, label, expectDetailFallback) {
   return result;
 }
 
+async function assertSourcePopoverWithinViewport(page, label) {
+  const trigger = page.locator('.source-status-wrap');
+  await trigger.focus();
+  await page.waitForTimeout(200);
+  const result = await page.locator('.source-popover').evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const list = element.querySelector('ul');
+    const firstLabel = list && list.querySelector('li span');
+    const labelRect = firstLabel ? firstLabel.getBoundingClientRect() : null;
+    const style = getComputedStyle(element);
+    const listStyle = list ? getComputedStyle(list) : null;
+    return {
+      left: rect.left,
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      width: rect.width,
+      viewportWidth: window.visualViewport ? window.visualViewport.width : window.innerWidth,
+      viewportHeight: window.visualViewport ? window.visualViewport.height : window.innerHeight,
+      visible: style.visibility === 'visible' && Number(style.opacity) > 0,
+      listOverflowY: listStyle ? listStyle.overflowY : '',
+      listScrollable: list ? list.scrollHeight > list.clientHeight + 1 : false,
+      labelVisible: Boolean(labelRect && labelRect.left >= rect.left && labelRect.right <= rect.right && labelRect.width > 80),
+      labelText: firstLabel ? firstLabel.textContent.trim() : ''
+    };
+  });
+  assert(result.visible, `${label}: 信源状态框未显示`);
+  assert(result.left >= 0 && result.right <= result.viewportWidth + 1, `${label}: 信源状态框横向超出视口`);
+  assert(result.top >= 0 && result.bottom <= result.viewportHeight + 1, `${label}: 信源状态框纵向超出视口`);
+  assert(result.width >= 320, `${label}: 信源状态框宽度异常`);
+  assert(result.listOverflowY === 'auto' && result.listScrollable, `${label}: 多信源列表未启用内部滚动`);
+  assert(result.labelVisible && result.labelText, `${label}: 信源名称被裁切`);
+  await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await page.mouse.move(result.viewportWidth - 2, result.viewportHeight - 2);
+  return result;
+}
+
 async function assertPanelWithinViewport(page, label) {
   const panel = page.locator('#desktop-debug-floating-panel');
   await panel.waitFor({ state: 'visible' });
@@ -153,6 +190,7 @@ async function main() {
       await guideSkip.click();
       await page.locator('.guide-overlay').waitFor({ state: 'detached' });
     }
+    const sourcePopover = await assertSourcePopoverWithinViewport(page, '920x500 sources');
     const mapMedium = await assertMapOverlaySafety(page, '920x500 map', false);
     const settingsButton = page.locator('#desktop-settings-open-compact:visible, #desktop-settings-open:visible').first();
     await settingsButton.click();
@@ -229,7 +267,7 @@ async function main() {
     const obs = await assertObsWithinViewport(obsPage);
     await obsPage.close();
 
-    console.log(JSON.stringify({ ok: true, mapMedium, mapCompact, medium, compact, recovered, obs, mobileNotifications: true }));
+    console.log(JSON.stringify({ ok: true, sourcePopover, mapMedium, mapCompact, medium, compact, recovered, obs, mobileNotifications: true }));
   } finally {
     await browser.close();
   }
